@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="lib/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="lib/webgl_helper.js"></script>
+</head>
+<body>
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying float vluminosity;
+        void main(void) {
+            gl_FragColor = vec4(1, 0, 0, vluminosity);
+        }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute float luminosity;
+        uniform mat4 uMMatrix;
+        uniform mat4 uPMatrix;
+
+        varying float vluminosity;
+
+        void main(void) {
+            gl_PointSize = 7.0;
+            gl_Position = uPMatrix * uMMatrix * vec4(aVertexPosition, 1.0);
+            vluminosity = luminosity;
+        }
+    </script>
+    <canvas id="background" height="600", width="800"></canvas>
+    <script type="text/javascript" src="main.js"></script>
+</body>
+</html>
