@@ -17,6 +17,9 @@
     margin-left: 200px;
     padding: 10px;
     display: inline-block;
+    margin: 12px;
+    box-shadow: 0px 0px 4px 4px black;
+    font-size: 12px;
   }
 
   .code {
@@ -38,6 +41,9 @@
     margin-left: 200px;
     padding: 10px;
     display: inline-block;
+    margin: 12px;
+    box-shadow: 0px 0px 4px 4px black;
+    font-size: 12px;
   }
   </code>
 </pre>
@@ -59,24 +65,30 @@
     var promise = new Promise(function(resolve, reject) {
       var start = window.performance.now();
       if (update()) {
-        resolve(start);  
+        resolve();  
       }
     });
-    promise.then(function(start) {
-      var time = window.performance.now() - start;
-      document.getElementById('non-batch-result').textContent = time;
-      document.body.removeChild(document.getElementById('target-list'));
-      listGen();
+    promise.then(function() {
+      setTimeout(reset, 1000);
     });
   }
         </code>
       </pre>
     </div>
     <button id="non-batch">Individual update className</button>
-    <div id="non-batch-result">N/A</div>
+    <div id="non-batch-result"><p>
+      Sample Result: <br>
+      Recalculate Style: 50.516ms; <br>
+      Layout: 13.258ms; <br>
+      Update Layer Tree: 0.052ms; <br>
+      Paint: 4.237ms; <br>
+      Composite Layers: 0.095ms; <br>
+      Paint x 25: 8.892ms; <br>
+      Total: 77.05<br>
+    </p></div>
   </div>
   <div class="panel">
-  <div class="code">
+    <div class="code">
       <pre>
         <code>
   function update() {
@@ -88,20 +100,31 @@
   }
 
   function batchUpdate() {
-    var start = window.performance.now();
-    var id = window.requestAnimationFrame(update);
-    window.cancelAnimationFrame(id);
-    var time = window.performance.now() - start;
-    document.getElementById('batch-result').textContent = time;
-    document.body.removeChild(document.getElementById('target-list'));
-    listGen();
+    var promise = new Promise(function(resolve, reject) {
+      window.requestAnimationFrame(update); 
+      resolve(); 
+    });
+    promise.then(function() {
+      setTimeout(reset, 1000);
+    });
   }
         </code>
       </pre>
     </div>
     <button id="batch">Batch update className</button>
-    <div id="batch-result">N/A</div>
+    <div id="batch-result"><p>
+      Sample Result: <br>
+      Animation Framed Fired(1) <br>
+      Recalculate Style: 49.347ms <br>
+      Layout: 9.515ms <br>
+      Update Layer Tree: 0.042ms <br>
+      Paint: 0.088ms <br>
+      Composite Layers: 0.076ms <br>
+      Paint x 26: 10.395ms <br>
+      Total: 69.463ms<br>
+    </p></div>
   </div>
+  <p> Conclusion: They are about the same performance on Chrome.</p>
 </div>
 </body>
 </html>

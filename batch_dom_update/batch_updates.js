@@ -32,35 +32,29 @@ function update() {
   return true;
 }
 
+function reset() {  
+  document.body.removeChild(document.getElementById('target-list'));
+  listGen();
+}
+
 function nonBatchUpdate() {
   var promise = new Promise(function(resolve, reject) {
     var start = window.performance.now();
     if (update()) {
-      resolve(start);  
+      resolve();  
     }
   });
-  promise.then(function(start) {
-    var time = window.performance.now() - start;
-    nonBatchResult.dataset['time'] = time;
-    nonBatchResult.textContent = time;
-    if (batchResult.dataset['time']) {
-      nonBatchResult.textContent += '(' + parseInt(time / parseFloat(batchResult.dataset['time'])) + ' times slower !)';
-    }
-    document.body.removeChild(document.getElementById('target-list'));
-    listGen();
+  promise.then(function() {
+    setTimeout(reset, 1000);
   });
 }
 
 function batchUpdate() {
-  var start = window.performance.now();
-  var id = window.requestAnimationFrame(update);
-  window.cancelAnimationFrame(id);
-  var time = window.performance.now() - start;
-  batchResult.dataset['time'] = time;
-  batchResult.textContent = time;
-  if (nonBatchResult.dataset['time']) {
-    batchResult.textContent += '(' + parseInt(parseFloat(nonBatchResult.dataset['time']) / time) + ' times faster! )'
-  }
-  document.body.removeChild(document.getElementById('target-list'));
-  listGen();
+  var promise = new Promise(function(resolve, reject) {
+    window.requestAnimationFrame(update); 
+    resolve(); 
+  });
+  promise.then(function() {
+    setTimeout(reset, 1000);
+  });
 }
