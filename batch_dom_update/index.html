@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Batch Dom Update</title>
+  <script src="batch_updates.js"></script>
+</head>
+<style type="text/css">
+  .panel {
+    display: inline-block;
+    padding: 10px;
+    margin: 15px;
+  }
+
+  .target {
+    background: black;
+    color: white;
+    margin-left: 200px;
+    padding: 10px;
+    display: inline-block;
+  }
+
+  .code {
+    border-width: 5px;
+    border-style: inset;
+    background: #EADEDE;
+    font-size: 12px;
+    margin: 5px;
+  }
+
+  pre {
+
+  }
+</style>
+<body>
+<h2>Batch DOM update VS Individual DOM update</h2>
+<p>A test on DOM reflow + repaint speed by add 'target' class to 1000 list nodes</p>
+<pre>
+  <code>
+  .target {
+    background: black;
+    color: white;
+    margin-left: 200px;
+    padding: 10px;
+    display: inline-block;
+  }
+  </code>
+</pre>
+<p>Batch update uses requestAnimation to repaint + reflow the DOM only once</p>
+<div>
+  <div class="panel">
+    <div class="code">
+      <pre>
+        <code>
+  function update() {
+    lis = document.getElementsByTagName('li');
+    for(var i = 0; i < lis.length; i++) {
+      lis[i].classList.add('target');
+    }
+    return true;
+  }
+
+  function nonBatchUpdate() {
+    var promise = new Promise(function(resolve, reject) {
+      var start = window.performance.now();
+      if (update()) {
+        resolve(start);  
+      }
+    });
+    promise.then(function(start) {
+      var time = window.performance.now() - start;
+      document.getElementById('non-batch-result').textContent = time;
+      document.body.removeChild(document.getElementById('target-list'));
+      listGen();
+    });
+  }
+        </code>
+      </pre>
+    </div>
+    <button id="non-batch">Individual update className</button>
+    <div id="non-batch-result">N/A</div>
+  </div>
+  <div class="panel">
+  <div class="code">
+      <pre>
+        <code>
+  function update() {
+    lis = document.getElementsByTagName('li');
+    for(var i = 0; i < lis.length; i++) {
+      lis[i].classList.add('target');
+    }
+    return true;
+  }
+
+  function batchUpdate() {
+    var start = window.performance.now();
+    var id = window.requestAnimationFrame(update);
+    window.cancelAnimationFrame(id);
+    var time = window.performance.now() - start;
+    document.getElementById('batch-result').textContent = time;
+    document.body.removeChild(document.getElementById('target-list'));
+    listGen();
+  }
+        </code>
+      </pre>
+    </div>
+    <button id="batch">Batch update className</button>
+    <div id="batch-result">N/A</div>
+  </div>
+</div>
+</body>
+</html>
