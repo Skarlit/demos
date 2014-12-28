@@ -1,0 +1,227 @@
+<html>
+<head>
+  <title>Travel Salesman</title>
+  <style type="text/css">
+    table{
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <section id="status"> 
+    <table>
+      <tr>
+        <th>Current Energy</th>
+        <th>TimeStep</th>
+        <th>Temperature</th>
+        <th>Lowest Energy </th>
+      </tr>
+      <tr>
+        <td id="currentEnergy"></td>
+        <td id="time"></td>
+        <td id="temperature"></td>
+        <td id="lowestEnergy"></td>
+      </tr>
+      <tr>
+        <td><button id="init">Initialize</button></td>
+        <td><label>a: <input id="a_const" type="text" value="1000"> </label></td>
+        <td><label>b: <input id="b_const" type="text" value="0.05"> </label></td>
+        <td><label># of Cities <input id="cities" type="text" value="10"> </label></td>
+      </tr>
+      <tr>
+        <td><button id="step">Step</button></td>
+        <td><button id="play">Play</button></td>
+        <td><button id="stop">Stop</button></td>
+      </tr>
+    </table>
+  </section>
+  <canvas id="canvas">  </canvas>
+
+  <script type="text/javascript">
+    var canvas = document.getElementById('canvas');
+
+    function City (options){
+      this.next = undefined;
+      this.prev = undefined;
+      this.name = options.name;
+      this.x = options.x || Math.random() * options.x_constraint;
+      this.y = options.y || Math.random() * options.y_constraint;
+    }
+
+    City.prototype.draw = function(ctx) {
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.next.x, this.next.y);
+      ctx.stroke();
+      ctx.font = '15pt Calibri';
+      ctx.fillStyle = 'blue';
+      ctx.fillText(this.name, this.x + 10, this.y + 10);
+
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI, false);
+      ctx.fillStyle = 'green';
+      ctx.fill();
+    };
+
+    City.prototype.distanceToNext = function(fn) {
+      return fn(this.x, this.y, this.next.x, this.next.y);
+    };
+
+    function Simulation(canvas, height, width, numOfCities, a, b){
+      this.canvas = canvas;
+      this.canvas.height = height;
+      this.canvas.width = width;
+      this.ctx = canvas.getContext('2d');
+      this.size = numOfCities;
+      this.cities = [];
+      this.previousEnergy = 0;
+      this.temperature = a/b;
+      this.a = a;
+      this.b = b;
+      this.lowestEnergy = 0;
+      this.ticks = 1;
+    }
+
+    Simulation.prototype.init = function() {
+      for(var i = 0; i < this.size; i++){
+        this.cities.push(new City({
+          x_constraint: this.canvas.width,
+          y_constraint: this.canvas.height,
+          name: "city " + i
+        }))
+      }
+      this.linkCities();
+      this.previousEnergy = this.energy();
+      this.lowestEnergy = this.previousEnergy;
+      this.drawStats();
+      this.render();
+    };
+
+    Simulation.prototype.energy = function(){
+      var dist = 0;
+      for(var i = 0; i < this.cities.length; i++){
+        dist += this.cities[i].distanceToNext(function(x,y,nextX,nextY){
+          return (x - nextX)*(x - nextX) + (y - nextY)*(y - nextY);
+        })
+      }
+      return dist;
+    }
+
+    Simulation.prototype.draw = function(){
+      for(var i = 0; i < this.cities.length; i++){
+        this.cities[i].draw(this.ctx);
+      }
+    }
+
+    Simulation.prototype.linkCities = function(city) {
+      for(var i = 0; i < this.cities.length; i++){
+        this.cities[i].next = this.cities[ (i + 1) % this.cities.length];
+      }
+    };
+
+    Simulation.prototype.drawStats = function() {
+        document.getElementById("currentEnergy").innerHTML = Math.round(this.previousEnergy);
+        document.getElementById("time").innerHTML = this.ticks;
+        document.getElementById("temperature").innerHTML = Math.round(this.temperature) + " C";
+        document.getElementById("lowestEnergy").innerHTML = Math.round(this.lowestEnergy);
+    };
+
+    Simulation.prototype.render = function() {
+        this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+        this.draw();
+    };
+
+    Simulation.prototype.proposal = function() {
+      var i = Math.floor((this.cities.length ) * Math.random());
+      var j = Math.floor((this.cities.length ) * Math.random());
+      var m = Math.floor((this.cities.length ) * Math.random());
+      var n = Math.floor((this.cities.length ) * Math.random());
+
+      this.perturbation(i, j);
+      this.perturbation(m, n);
+      var proposedEnergy = this.energy();
+      var deltaE = proposedEnergy - this.previousEnergy;
+      if(deltaE < 0){
+        this.previousEnergy = proposedEnergy;
+        if(proposedEnergy < this.lowestEnergy){
+          this.lowestEnergy = proposedEnergy;
+        }
+        this.render();
+      }else{
+        var h = Math.exp(-deltaE / this.temperature)
+        if(Math.random() < h){
+          this.previousEnergy = proposedEnergy;
+          this.drawStats();
+          this.render();
+        }else{
+          this.perturbation(m, n);
+          this.perturbation(i, j); //go back to original state
+        }
+      }
+      this.drawStats();
+      this.updateTemp();
+    };
+
+    Simulation.prototype.perturbation = function(i, j) {
+      var name_i = this.cities[i].name;
+      var x_i = this.cities[i].x;
+      var y_i = this.cities[i].y;
+
+      this.cities[i].name = this.cities[j].name;
+      this.cities[i].x = this.cities[j].x;
+      this.cities[i].y = this.cities[j].y;
+      this.cities[j].name = name_i;
+      this.cities[j].x = x_i;
+      this.cities[j].y = y_i;
+    };
+
+    Simulation.prototype.updateTemp = function() {
+      this.temperature = this.a / (this.b + Math.log(this.ticks));
+      this.ticks += 1;
+    };
+
+    Simulation.prototype.step = function(stepSize) {
+      stepSize = stepSize || 1
+      for(var i = 0; i < stepSize; i++){
+        this.proposal();
+      }
+    };
+
+    Simulation.prototype.reset = function() {
+      this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+    };
+
+
+
+    document.getElementById('init').addEventListener('click', function(){
+      var a_const = parseInt(document.getElementById('a_const').value);
+      var b_const = parseInt(document.getElementById('b_const').value);
+      var cities = parseInt(document.getElementById('cities').value);
+      if(window.newSim){
+        window.newSim.reset();
+        window.newSim = undefined;
+      }
+      window.newSim  = new Simulation(canvas, 600, 1200, cities, a_const, b_const);
+      window.newSim.init();
+
+
+      document.getElementById('step').addEventListener('click', function(){
+        window.newSim.step(1);
+      });
+
+      document.getElementById('play').addEventListener('click', function(){
+        if(!window.simID){
+          window.simID = setInterval(function(){window.newSim.step(1)}, 1); 
+        }    
+      });
+
+      document.getElementById('stop').addEventListener('click', function(){
+        window.clearInterval(window.simID);
+        window.simID = undefined;
+      });
+    });
+
+
+   </script>
+</body>
+</html>
