@@ -15,7 +15,7 @@ window.onload = function (){
 function listGen() {  
   var ul = document.createElement('ul');
   ul.id = 'target-list';
-  for(var i = 0; i < 1000; i++) {
+  for(var i = 0; i < 10000; i++) {
     var li = document.createElement('li');
     li.textContent = 'List item number ' + i;
     ul.appendChild(li);
@@ -28,6 +28,7 @@ function update() {
   lis = document.getElementsByTagName('li');
   for(var i = 0; i < lis.length; i++) {
     lis[i].classList.add('target');
+    lis[i].textContent += 'Ha';
   }
   return true;
 }
