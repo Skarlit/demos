@@ -1,27 +1,38 @@
-function PathFinder(grids, g, h) {
-
+function PathFinder(mazeDom, g, h) {
+  var grids = this._parseDom(mazeDom);
+  this.gridMap = new Map(grids);
 }
 
-AStar = function(root, goal) {
-  var heap = new Heap([root]);
-  var visited = {};
+PathFinder.prototype.AStarSearch = function(root, goal) {
+  var heap = new Heap(root, 'accumlateDist');
   while (!heap.empty()) {
-    var node = heap.pop();
-    visited[node] = true;
-    if( node == goal) {
-      console.log(done);
+    var node = Heap.pop();
+    node.visited = true;
+    if(node.eq(goal)) {
+      // backtrace and print route
+      var parent = node.previousNode;
+      while (!parent.eq(root)) {
+        parent.print();
+        parent = parent.previousNode;
+      }
+      parent.print();
     } else {
-      for (var i = 0; i < node.children.length; i++) {
-        if (!visited[node]) {
-          heap.insert(node);
+      var neighbors = this.gridMap.adjacentTo(node.i, node.j, function(node) { return node.weight == 0 })
+      for (var i = 0; i < neighbors.length; i++) {
+        if (!neighbors[i].visited) {
+          heap.insert(neighbors[i]);
         }
       }
     }
   }
 }
 
+PathFinder.prototype._parseDom = function(mazeDom) {
+  
+};
+
 function dist(start, goal) {
-  return start.previousNode.accumlateDist + start.weight + h(start, goal);
+  return start.previousNode.accumlateDist + start.weight + Math.abs(start.x - goal.x) + Math.abs(start.y - goal.y);
 }
 
 // arrayMap: two dimensional array of integers: 0 for space, 1 for wall.
@@ -38,6 +49,27 @@ function Map(arrayMap) {
   }
 }
 
+Map.prototype._get = function(i, j) {
+  return this.map[i][j];
+};
+
+Map.prototype.adjacentTo = function(i, j, filter) {
+  var neighbors = [];
+  if (j > 0) {
+    i > 0 && filter(this._get(i - 1, j - 1)) ? neighbors.push(this._get(i - 1, j - 1)) : null;
+    filter(this._get(i, j - 1)) ? neighbors.push(this._get(i, j - 1)) : null;
+    i + 1 < this.rowSize && filter(this._get(i + 1, j - 1)) ? neighbors.push(this._get(i + 1, j - 1)) : null;
+  }
+  if (j > 0) {
+    i > 0 && filter(this._get(i - 1, j + 1)) ? neighbors.push(this._get(i - 1, j + 1)) : null;
+    filter(this._get(i, j + 1)) ? neighbors.push(this._get(i, j + 1)) : null;
+    i + 1 < this.rowSize && filter(this._get(i + 1, j + 1)) ? neighbors.push(this._get(i + 1, j + 1)) : null;
+  }
+  i + 1 < this.rowSize && filter(this._get(i + 1, j)) ? neighbors.push(this._get(i + 1, j)) : null;
+  i > 0 && filter(this._get(i - 1, j)) ? neighbors.push(this._get(i - 1, j)) : null;
+};
+
+// nodes for Map class.
 function Node(x, y, weight) {
   this.x = x;
   this.y = y;
@@ -46,6 +78,14 @@ function Node(x, y, weight) {
   this.previousNode = null;
   this.weight = weight; 
 }
+
+Node.prototype.eq = function(operand) {
+  return this.x == operand.x && this.y == operand.y
+};
+
+Node.prototype.print = function() {
+  console.log('(' + print.x + ', ' + print.y + ')');
+};
 
 // min binary heap
 function Heap(obj, key) {
@@ -102,12 +142,14 @@ Heap.prototype.print = function() {
   console.log(this.heap.map(function(el) { return el ? el[this.key] : null}.bind(this)));
 }
 
+Heap.prototype.empty = function() {
+  return this.heap.length == 1;
+};
+
 window.onload = function() {
   var h = new Heap({val: 5}, 'val');
-  h.insert({val: 6});
-  h.print();
-  h.insert({val: 3});
-  h.print();
-  h.pop();
-  h.print();
+  for(var i = 0; i < 10; i ++) {
+    h.insert({val: 10 - i}, 'val');
+    h.print();
+  }
 }

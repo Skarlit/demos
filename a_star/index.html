@@ -2,9 +2,125 @@
 <html>
 <head>
   <title></title>
-  <script src="Astar.js"></script>
+  <style type="text/css">
+    .grid {
+      width: 16px;
+      height: 16px;
+      border: 1px solid black;
+    }
+    .wall {
+      background-color: #999;
+    }
+    .start {
+      background-color: green;
+    }
+    .goal {
+      background-color: red;
+    }
+    #maze {
+      table-layout: fixed;
+      border-spacing: 0;
+    }
+  </style>
+  <script type="text/javascript" src="Astar.js"></script>
 </head>
 <body>
+ <button id="wall-builder">Wall</button>
+ <button id="start-builder">Start</button>
+ <button id="goal-builder">Goal</button>
+ <button id="start-search">Start Search</button>
+ <script type="text/javascript">
+    var mazeWrapper = document.createElement('table');
+    mazeWrapper.id = 'maze';
+    var height = 30;
+    var width = 30;
+    for (var i = 0; i < height; i++) {
+      var row = document.createElement('tr');
+      for (var j = 0; j < width; j++) {
+        var grid = document.createElement('td');
+        grid.id = i + '-' + j;
+        grid.classList.add('grid');
+        row.appendChild(grid);
+      }
+      mazeWrapper.appendChild(row);
+    }
 
+    // state: wall, start, goal
+    const start = 'start';
+    const wall = 'wall';
+    const goal = 'goal';
+    var control = {'mousedown': false, 'state': null}
+
+    var wallBuilder = document.getElementById('wall-builder');
+    var startBuilder = document.getElementById('start-builder');
+    var goalBuilder = document.getElementById('goal-builder');
+    var startSearch = document.getElementById('start-search');
+    wallBuilder.addEventListener('click', function(e) {
+      if (control.state != wall) {
+        control.state = wall;
+        startBuilder.textContent = 'Start';
+        goalBuilder.textContent = 'Goal';
+        wallBuilder.textContent = 'Cancel';
+      } else {
+        control.state = null;
+        this.textContent = 'Wall';
+      }
+    });
+
+    startBuilder.addEventListener('click', function(e) {
+      if (control.state != start) {
+        control.state = start;
+        startBuilder.textContent = 'Cancel';
+        goalBuilder.textContent = 'Goal';
+        wallBuilder.textContent = 'Wall';
+      } else {
+        control.state = null;
+        this.textContent = 'Start';
+      }
+    });
+
+    goalBuilder.addEventListener('click', function(e) {
+      if (control.state != goal) {
+        control.state = goal;
+        startBuilder.textContent = 'Start';
+        goalBuilder.textContent = 'Cancel';
+        wallBuilder.textContent = 'Wall';
+      } else {
+        control.state = null;
+        this.textContent = 'Goal';
+      }
+    });
+
+    window.addEventListener('mousedown', function(e) {
+      control['mousedown'] = true;
+    })
+    window.addEventListener('mouseup', function(e) {
+      control['mousedown'] = false;
+    })
+
+    mazeWrapper.addEventListener('mousemove', function(e) {
+      if (control['mousedown'] && e.target.classList.contains('grid') && control.state == wall) {
+        e.target.classList.add('wall');
+      }
+    });
+
+    mazeWrapper.addEventListener('click', function(e) {
+      if (e.target.classList.contains('grid')) {
+        if (control.state == start) {
+          var prevStart = document.getElementsByClassName('start');
+          if (prevStart.length > 0 && prevStart[0] != e.target) { prevStart[0].classList.remove('start'); }
+          e.target.classList.add('start');
+        } else if (control.state == goal) {
+          var prevGoal = document.getElementsByClassName('goal');
+          if (prevGoal.length > 0 && prevGoal[0] != e.target) { prevGoal[0].classList.remove('goal'); }
+          e.target.classList.add('goal');
+        }
+      }
+    })
+    document.body.appendChild(mazeWrapper);
+    startSearch.addEventListener('click', function(e) {
+      var pFinder = new PathFinder(mazeWrapper, height, width);
+    });
+ </script>
 </body>
 </html>
