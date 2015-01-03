@@ -17,11 +17,16 @@
     .goal {
       background-color: red;
     }
+    .path {
+      background-color: #88a;
+    }
     #maze {
       table-layout: fixed;
       border-spacing: 0;
     }
   </style>
+  <script type="text/javascript" src="minheap.js"></script>
+  <script type="text/javascript" src="map.js"></script>
   <script type="text/javascript" src="Astar.js"></script>
 </head>
 <body>
@@ -39,6 +44,8 @@
       for (var j = 0; j < width; j++) {
         var grid = document.createElement('td');
         grid.id = i + '-' + j;
+        grid.setAttribute('data-i', i);
+        grid.setAttribute('data-j', j);
         grid.classList.add('grid');
         row.appendChild(grid);
       }
@@ -120,6 +127,7 @@
     document.body.appendChild(mazeWrapper);
     startSearch.addEventListener('click', function(e) {
       var pFinder = new PathFinder(mazeWrapper, height, width);
+      pFinder.AStarSearch(mazeWrapper);
     });
  </script>
 </body>
