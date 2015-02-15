@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="levenshtein.js"></script>
+  <title></title>
+  <style type="text/css">
+    body {
+      font-weight: bold;
+      background: black;
+      color: rgb(19, 247, 204);
+    }
+    td {
+      line-height: 40px;
+      width: 50px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    input {
+      background: black;
+      border: 1px solid rgb(19, 247, 204);
+      color: rgb(19, 247, 204);
+    }
+    button {
+      background: black;
+      color: rgb(19, 247, 204);
+      border: 2px solid rgb(19, 247, 204);
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.onload = function() {
+      var word1 = document.getElementById('word1');
+      var word2 = document.getElementById('word2');
+      var genTable = document.getElementById('gen-table');
+      var content = document.getElementById('content');
+      var word1Val = null;
+      var word2Val = null;
+      genTable.addEventListener('click', function(e) {
+        if (word1.validity.valid && word2.validity.valid) {
+          word1Val = word1.value;
+          word2Val = word2.value;
+          if (table = content.getElementsByTagName('table')[0]) {
+            content.removeChild(table);
+          }
+          content.appendChild(EditDist.genTable(word1Val, word2Val));
+          EditDist.calcLevenshtein(word1Val, word2Val);
+        }
+      });
+    }
+  </script>
+  <label>Word 1: <input type="text" id="word1" required/></label>
+  <label>Word 2: <input type="text" id="word2" required/></label>
+  <button id="gen-table">Generate Table</button>
+  <div id="content"></div>
+</body>
+</html>
